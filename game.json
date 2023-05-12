@@ -1,0 +1,116 @@
+{
+  "intro": "Hello and welcome to Tanny/'s treasure hunt!\nAs an adventure enthusiast, you have stumbled upon one of Segovia's most intimate and mysterious treasure hunts yet\nYears ago, before Segovia became the tourist attraction we now know, it was plagued with mysteries. The biggest one being the **name**'s treasure.\nFor years, **name**/'s house has been left untouched and many believe it is now haunted by the ghosts of those who tried to find the treasure he left behind.\nNo one knows what lies inside. Many say a promise of fulfilling desires while others argue it's the biggest fortune a man can lay its eyes upon...\nAll have tried and failed until you... the treasure is hidden in an unknown room you have to get to but be careful, every decision brings you either one step closer to the treasure and exit or one step closer to certain demise.\nEach room contains different objects to help you find the treasure and escape. Each room is a differen colour to help you differentiate\nand locate where you are on the haunted house map.\"",
+
+  "intro_scene" : "\" You find yourself at the threshold of the abandoned house where the treasure is set to be. \n    You were only given a flashlight and a map as the treasure's charm is that it is in an unknown room. You have 4\n    choices infront of you each with a different colour, each leading to a different part of the house.\n    It is dark and dusty and you need to make a decision, which will that be?\"",
+  "game_words": {},
+  "rooms" : {
+    "intro_scene" : { 
+      "id" : "intro_scene",
+      "name": "Main Salon",
+      "description" : "This is the main salon",
+      "objects": ["flashlight"],
+      "directions": {
+        "east" : "kitchen_scene",
+        "west" : "haunted_room_scene",  
+        "north" : "great_salon_scene",
+        "south" : "game_over"
+      },
+      "level_required": 0
+    },
+    "great_salon_scene" : {
+      "id" : "great_salon_scene",
+      "name": "Great Salon",
+      "description" : "This is the great salon",
+      "objects": [],
+      "directions": {
+        "upstairs" : "attic_scene",
+        "right" : "living_room_scene",
+        "left" : "great_salon_scene",
+        "backward" : "intro_scene"
+      },
+      "level_required": 0
+    },
+    "haunted_room_scene" : {
+      "id" : "haunted_room_scene",
+      "name": "Haunted room",
+      "description" : "This is the Haunted room scene",
+      "objects": ["amulet"],
+      "directions": { 
+        "right" : "trap_room_scene",
+        "left" : "mummy_scene",
+        "backward" : "intro_scene"
+      },
+      "level_required": 0
+    },
+    "trap_room_scene" : {
+      "id" : "trap_room_scene",
+      "name": "Trap Room",
+      "description" : "This is the Trap room scene",
+      "objects": [],
+      "directions": { 
+        "fight" : "",
+        "run" : ""
+      },
+      "level_required": 2
+    },
+    "mummy_scene" : {
+      "id" : "mummy_scene",
+      "name": "Mummy Room",
+      "description" : "This is the Mummy  scene",
+      "objects": [],
+      "directions": { 
+        "fight" : "",
+        "run" : ""
+      },
+      "level_required": 2
+    },
+    "attic_scene":{
+      "id" : "attic_scene",
+      "name": "Attic",
+      "description" : "This is the Attic",
+      "objects": ["sword"],
+      "directions": {
+        "forward" : "kitchen_scene",
+        "backward" : "habitacion_malvada"
+      },
+      "level_required": 0
+    },
+    "living_room_scene":{
+      "id" : "living_room_scene",
+      "name": "Living Room",
+      "description" : "This is the Living Room",
+      "objects": [],
+      "directions": {
+        "forward" : "kitchen_scene",
+        "backward" : "habitacion_malvada"
+      },
+      "level_required": 0
+    },
+    "kitchen_scene" :{
+      "id" : "kitchen_scene",
+      "name": "Kitchen",
+      "description" : "This is the Kitchen salon",
+      "objects": ["weapon", "diamond"],
+      "directions": {
+        "upstairs" : "kitchen",
+        "right" : "habitacion_malvada",
+        "left" : "main_salon",
+        "backward" : "game_over"
+      },
+      "level_required": 1
+    },
+    "evil_spirit_scene" :{
+      "id" : "evil_spirit_scene",
+      "name": "Evil Spirit",
+      "description" : "This is the Evil Spirit Room",
+      "objects": [],
+      "directions": {
+        "run" : "game_over",
+        "right" : "habitacion_malvada",
+        "left" : "main_salon",
+        "backward" : "game_over"
+      },
+      "level_required": 1
+    }
+  }
+}
