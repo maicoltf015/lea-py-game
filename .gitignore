@@ -1,8 +1,10 @@
-helpers/__pycache__/*
-helpers/window.dev.py
+helpers/*
+__py_cache__/
 include
 Scripts
 Lib
 game copy.py
 pyvenv.cfg
 game.class.py
+.gitignore
+requirement.py

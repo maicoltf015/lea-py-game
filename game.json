@@ -10,10 +10,10 @@
       "description" : "This is the main salon",
       "objects": ["flashlight"],
       "directions": {
-        "east" : "kitchen_scene",
-        "west" : "haunted_room_scene",  
         "north" : "great_salon_scene",
-        "south" : "game_over"
+        "east" : "kitchen_scene",
+        "south" : "game_over",
+        "west" : "haunted_room_scene"  
       },
       "level_required": 0
     },
@@ -40,7 +40,7 @@
         "left" : "mummy_scene",
         "backward" : "intro_scene"
       },
-      "level_required": 0
+      "level_required": 2
     },
     "trap_room_scene" : {
       "id" : "trap_room_scene",
