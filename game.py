@@ -20,12 +20,7 @@ class Loading():
 
             if f!= '':
                 console.log(f'[bold][red]{f}!')
- 
-class CustomPrint():
-    def __init__(self, text):
-        # borde = Box(width=len(text) + 4, height=3)
-        console.rule(text.center(len(text) + 2), style="bold green")
- 
+  
 class CuteWrite:
     def __init__(self, text, color='', callback=None, time=0.005):
         for letter in text:
@@ -67,13 +62,24 @@ class Game:
         self.intro()
      
     
-    def update_header(self, cls=True):  
+    def update_header(self, cls=True):
         
         if cls:
             os.system('cls')
-        
+         
+        hearth ='❤️  '
+        attemps = hearth * self.attempts if self.attempts > 0 else "❌"
+
         if self.refresh_player_info:
-            CustomPrint(f"Player: {self.player} | Room: {self.actual_room['name']} | Score: {self.score} | Level: {self.level}")
+            text = '{0}{1}{2}{3}{4}'.format(
+                f"[Player: [blue]{self.player}[/] | ",
+                f"Room: [blue]{self.actual_room['name']}[/] | ",
+                f"Score: [blue]{self.score}[/] | ",
+                f"Level: [blue]{self.level}[/] | ",
+                f"Attempts: [blue]{attemps}[/]]"
+            )
+
+            console.print(text, style="bold")
         else:
             self.refresh_player_info = True
 
@@ -151,8 +157,9 @@ class Game:
         self.attempts += qty
 
 
-    def __subtract_attempts(self, qty = 1):
-        self.attempts += qty
+    def __subtract_attempts(self, qty = 1, reason = ''):
+        self.attempts -= qty
+        self.error_message = reason if reason != "" else self.error_message
 
     
     def check_attempts(self):
@@ -168,12 +175,13 @@ class Game:
 
         room_name = self.actual_room['name']
         Loading(f'{"Coming back" if is_coming_back else "Entering"} to {room_name}', time=1.5)
+        self.update_header()
         getattr(self, room_key)()
 
 
     def __set_direction_done(self,room_key, direction):
         self.directions_done.append(direction)
-        del self.rooms[room_key]['directions'][direction] 
+        # del self.rooms[room_key]['directions'][direction] 
 
     
     def is_level_required(self):
@@ -204,11 +212,10 @@ class Game:
                 self.error_message = 'The player name cannot be empty'
                 self.get_player_info()
 
-        self.intro_scene()
+        self.__move_to_room('intro_scene')
 
     
     def intro_scene(self): 
-        self.update_header(cls=False)
         directions = self.__get_room_directions()
 
         if self.player_welcome is False:
@@ -223,14 +230,19 @@ class Game:
         #show the list of directions
         tree = Tree("\nNow, select a direction to continue")
         for direction in directions:
-            tree.add(f'[blue]{direction.title()}')
+            completed =  " is completed ✅" if direction in self.directions_done else ''
+            color =  "green" if direction in self.directions_done else 'yellow'
 
+            tree.add('[{0}]{1}{2}'.format(
+                color,
+                direction.title(),
+                completed
+            ))
 
-        if len(self.directions_done) > 0:
-            # dd = tree.add(f'[blue]You have already been in this direction')
-            for direction_done in self.directions_done:
-                tree.add(f'[green]{direction_done} is completed ✅')
-                 
+        # if len(self.directions_done) > 0:
+        #     # dd = tree.add(f'[blue]You have already been in this direction')
+        #     for direction_done in self.directions_done:
+        #         tree.add(f'[green]{direction_done} is completed ✅')
 
         rprint(tree) 
         
@@ -247,10 +259,8 @@ class Game:
            start_direction('east', self.actual_room['id'])
         
         elif (goto == 'south' or goto =='s') and 'south' in directions:
-            self.__subtract_score()
-            self.actual_room = self.game_file['rooms']['intro_scene']
-            console.print(f'[red]This leads to the outside of the house. You have found yourself trapped 😢!')
-            self.intro_scene()
+            self.error_message = 'This leads to the outside of the house. You have found yourself trapped 😢!'
+            self.__move_to_room('intro_scene') 
             
         elif (goto == 'west' or goto == 'w') and 'west' in directions:
             start_direction('west',  self.actual_room['id'])
@@ -262,7 +272,6 @@ class Game:
 
  
     def great_salon_scene(self):
-        self.update_header() 
         self.show_errors_if_exists()
 
         # CuteWrite("\nYou enter a grand salon where the windows are broken, there is a chilly atmosphere and suddenly\nyou hear a noise. It might be the wind or it might be a ghost. Which decision", color="[bold blue]") 
@@ -280,13 +289,16 @@ class Game:
             self.__move_to_room('living_room_scene')
 
         else:
-            self.error_message = 'Select a valid option'
-            self.great_salon_scene()
+            self.error_message = 'You were sent to Main salon'
+            self.__move_to_room('intro_scene', is_coming_back=True)
+    
     
     def attic_scene(self):
-        self.update_header()
+        if 'scene_completed' in self.actual_room:
+            CuteWrite("You have completed this scene", '[green]', time=0.05)
+            self.__move_to_room('great_salon_scene',  is_coming_back=True)
+            
         self.check_attempts()
-        
 
         # CuteWrite("""You see a tall dark figure but behind him appears to be an unknown object. What would you like to do?\nYou have to choose from your inventory an object to kill the figure with and reach the unknown object.""", '[bold yellow]', callback=self.show_inventory)
         
@@ -298,18 +310,26 @@ class Game:
 
             if user_decision == 'forward' or user_decision == 'f':
                 self.__add_score(25)
-                CuteWrite(f"You've found the treasure! Congrats you have obtained 25 points.", '[bold green]')
-                self.__set_direction_done('intro_scene', 'north')
+                CuteWrite(f"You've found the treasure! Congrats you have obtained 25 points.", '[bold green]', time=0.05)
+                
+                if 'scene_completed' in self.rooms['evil_spirit_scene']:
+                    self.__set_direction_done('intro_scene', 'north')
+                    self.level = 2
+
+                if 'scene_completed' not in self.rooms['attic_scene']:
+                    self.rooms['attic_scene']['scene_completed'] = True
+                
                 WinnerWindow()
-                self.level = 2
                 self.__move_to_room('intro_scene', is_coming_back=True)
                 break
+
             elif user_decision == 'backward' or user_decision == 'b':
+                self.error_message = 'You have lost the level! You have obtained 0 points and lose an attepmt.'
+                self.alert_message = self.error_message
                 self.__subtract_attempts()
-                CuteWrite(f"you have lost the level! You have obtained 0 points.", '[bold red]')
-                sleep(0.5)
                 self.__move_to_room('intro_scene', is_coming_back=True)
                 break
+
             else:
                 CuteWrite("Please enter valid decision", '[bold red]')
 
@@ -367,7 +387,7 @@ class Game:
             get_item = str(console.input("\n[yellow]What object do you want to select? ")).lower()
 
             if get_item == 'flashlight' and 'flashlight' in self.inventory:
-
+            
                 CuteWrite("""Oh no, you have awakened the monster\nnow you must fight if you want to pass the level\n\nWhat do you want to do?""", color='[bold red]')
                 sleep(2) 
                 
@@ -390,21 +410,24 @@ class Game:
                         self.__add_score(50)
                         CuteWrite(f"The monster has been killed. You've found the treasure! Congrats you have obtained +50 points.", '[bold green]')
                         WinnerWindow()
-                        self.__set_direction_done('intro_scene', 'east')
 
                         if not 'scene_completed' in self.actual_room:
                             self.actual_room['scene_completed'] = True
 
-                        self.intro_scene()
+                        if 'scene_completed' in self.rooms['attic_scene']:
+                            self.__set_direction_done('intro_scene', 'north')
+                            self.level = 2
+
+                        self.__move_to_room('intro_scene')
                         
                     else:
-                        CuteWrite("Wrong object or object is not in inventory", '[bold green]', time=0.05)
                         self.__subtract_attempts()
-                        self.evil_spirit_scene()
+                        self.error_message = 'Wrong object or object is not in inventory, you lose an attempt'
+                        self.__move_to_room('intro_scene', is_coming_back=True)
 
                 elif option == 2: #Run
-                    self.__subtract_attempts()
-                    self.evil_spirit_scene()
+                    self.__subtract_attempts(reason="You decide run, you lose an attempt")
+                    self.__move_to_room(self.actual_room['return_to_room'],  is_coming_back=True)
 
                 elif option == 3: #Backward
                     self.__move_to_room(self.actual_room['return_to_room'],  is_coming_back=True)
@@ -412,6 +435,13 @@ class Game:
                 else:
                     self.error_message = f'Option is not valid, please write a valid option'
                     start_scene()
+
+            elif get_item != 'flashlight' and get_item in self.inventory:
+                self.alert_message = 'You have been killed by the monsters because you have been selected the incorrect object for pass the level into the Evil Spirit, you lose an attempt.'
+                
+                self.__subtract_attempts(reason = self.alert_message)
+                self.__move_to_room(self.actual_room['return_to_room'],  is_coming_back=True)
+                
             else:
                 self.error_message = f'{get_item} is not available into the inventory'
                 start_scene()
@@ -431,8 +461,10 @@ class Game:
                 self.actual_room['attempt_obtained'] = True
                 CuteWrite("Congratulations, you've won one more attempt.")
                 sleep(0.5)
+            else:
+                self.error_message = "There are no more prizes in this room sadly :("
 
-            self.living_room_scene()
+            self.__move_to_room('living_room_scene', is_coming_back=True)
         elif option == 2: #Backward
             self.__move_to_room('great_salon_scene', is_coming_back=True)
 
@@ -445,6 +477,7 @@ class Game:
             
         
     def haunted_room_scene(self):
+        self.check_attempts()
         self.show_errors_if_exists()
         self.collet_object_from_room()
 
@@ -466,11 +499,12 @@ class Game:
 
     
     def trap_room_scene(self):
+        self.check_attempts()
         self.show_errors_if_exists()
 
         console.print('[red]You are trapped in the room, and you must kill an unknown monster that tries to attack you, what action do you want to take?')
 
-        console.print('[green]run (r)[/] or [blue]takeaction[/]')
+        console.print('[green]run (r)[/] or [blue]takeaction (t)[/]')
         action = str(console.input("\n[red]Select a option (r/t): ")).lower()
 
         if action == 'takeaction' or action == 't': 
@@ -482,14 +516,19 @@ class Game:
                 if get_item not in self.inventory:
                     CuteWrite(f'{get_item} is not available :( try again')
                     sleep(0.5)
+
                 else:
                     self.error_message = "You're still trapped, you can't get out of the room this way, you lost two attempts"
+                    self.alert_message = self.error_message
+
                     self.__subtract_attempts(2)
-                    self.trap_room_scene()
+                    self.__move_to_room('trap_room_scene')
                     break
 
         elif action == 'run' or action == 'r':
             self.__subtract_attempts()
+            self.alert_message = 'Lograste salir de la habitacion de trampas, pero has perdido una vida'
+            self.error_message = 'Lograste salir de la habitacion de trampas, pero has perdido una vida'
             self.__move_to_room('haunted_room_scene')
 
         else:

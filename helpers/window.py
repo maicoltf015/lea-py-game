@@ -95,7 +95,6 @@ class GameOverWindow:
             return 0
 
 
-
 class WinnerWindow:
     def __init__(self, window_title="Treasure box", action='You level up', prize="+50 points"): 
 
