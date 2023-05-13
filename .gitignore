@@ -1,5 +1,5 @@
 helpers/*
-__py_cache__/
+__pycache__/
 include
 Scripts
 Lib
