@@ -1,10 +1,9 @@
 helpers/*
-__pycache__/
+__pycache__/*
 include
 Scripts
 Lib
 game copy.py
 pyvenv.cfg
 game.class.py
-.gitignore
-requirement.py
+requirements.txt
