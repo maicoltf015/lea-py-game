@@ -135,4 +135,5 @@ class WinnerWindow:
             win.getMouse()
             win.close()
         except GraphicsError:
-            return 0
+            return None
+        

@@ -23,17 +23,19 @@ class Loading():
   
 class CuteWrite:
     def __init__(self, text, color='', callback=None, time=0.005):
-        for letter in text:
-            console.print(color+letter, end='')
-            sleep(time)
-        print()
+        # for letter in text:
+        #     console.print(color+letter, end='')
+        #     sleep(time)
+
+        # print()
+
         if callback is not None:
             callback()
 
 class Game:
     def __init__(self):
         
-        self.player = 'Lea'                    #name of player
+        self.player = ''                 #name of player
         self.score = 0                      #score of the player
         self.level = 1                      #level of the player
         self.is_level_completed = 0         #check if is the level completed
@@ -128,22 +130,35 @@ class Game:
 
     def collet_object_from_room(self):
         objects = self.actual_room['objects']
-         
-        if len(objects) > 0:
-            tree = Tree("Room objects")
+        room_key = self.actual_room['id']
+        objects_len = len(objects)
+
+        s = "s" if objects_len != 1 else ''
+
+        if objects_len > 0:
+            tree = Tree(f'There is {objects_len} object{s} in this room')
             for object in objects:
                 tree.add(f'[blue]{object.title()}')
                 
             rprint(tree)
 
+            seleccionados = ''
+            total_score = 0
             for object in objects:
                 decision = str(console.input(f"\n[blue]Do you want to add[/] [green]{object.title()}[/] [blue]to inventory? (y/n): ")).lower()
                 if decision == 'y':
-                    self.actual_room['objects'].remove(object)
                     self.__collect_object(object)
-                    CuteWrite(f'{object.title()} has been obtained', '[blue]')
-                    sleep(1)
+                    self.__add_score(5)
+                    total_score += 5
+                    seleccionados += f'{object.title()}, '
 
+            seleccionados = seleccionados.rstrip(", ")
+            if seleccionados != '':
+                for object_to_remove in seleccionados.split(","):
+                    self.rooms[room_key]['objects'].remove(object_to_remove.lower().replace(" ", ''))
+
+                CuteWrite(f'You been obtained ({seleccionados}), you earned +{total_score} points.', '[blue]', time=0.05)
+                
 
     def __add_score(self, qty = 1):
         self.score += qty
@@ -174,7 +189,7 @@ class Game:
         self.actual_room['return_to_room'] = return_to_room
 
         room_name = self.actual_room['name']
-        Loading(f'{"Coming back" if is_coming_back else "Entering"} to {room_name}', time=1.5)
+        # Loading(f'{"Coming back" if is_coming_back else "Entering"} to {room_name}', time=1.5)
         self.update_header()
         getattr(self, room_key)()
 
@@ -219,7 +234,7 @@ class Game:
         directions = self.__get_room_directions()
 
         if self.player_welcome is False:
-            CuteWrite(f'Welcome {self.player}. Choose wisely and good luck!', color="[bold blue]")
+            # CuteWrite(f'Welcome {self.player}. Choose wisely and good luck!', color="[bold blue]", time=0.05)
             self.player_welcome = True
         
         self.show_errors_if_exists()
@@ -310,16 +325,24 @@ class Game:
 
             if user_decision == 'forward' or user_decision == 'f':
                 self.__add_score(25)
-                CuteWrite(f"You've found the treasure! Congrats you have obtained 25 points.", '[bold green]', time=0.05)
-                
+                CuteWrite(f"You've found the treasure! Congrats you have obtained +25 points.", '[bold green]', time=0.05)
+              
+                text_action = f"You've pass the {self.actual_room['name']}"
+
                 if 'scene_completed' in self.rooms['evil_spirit_scene']:
                     self.__set_direction_done('intro_scene', 'north')
                     self.level = 2
+                    text_action = f"You level up to 2"
+
 
                 if 'scene_completed' not in self.rooms['attic_scene']:
                     self.rooms['attic_scene']['scene_completed'] = True
                 
-                WinnerWindow()
+                WinnerWindow(
+                    prize="+25 points",
+                    action=text_action
+                )
+
                 self.__move_to_room('intro_scene', is_coming_back=True)
                 break
 
@@ -342,11 +365,48 @@ class Game:
             room = self.actual_room['name']
             return_to_room = self.actual_room['return_to_room']
 
-            self.error_message = f'Ohh no! You are not allowed to pass to the {room}, you need to complete the level: {self.level}'
+            self.error_message = f'Ohh no! You are not allowed to pass to the {room}, you need to complete the level: {self.level}. Try to start north.'
             self.__move_to_room(return_to_room, is_coming_back=True)
  
         else:
+            def start_fight_with_zombie_cook():
+                CuteWrite("There's a putrid odor coming from a dark, decomposed figure, moving through the shadows. Suddenly you see him clearly: a zombie cook with a sharp knife in his hand. He looks like he's not willing to leave you alone, and he stares at you with dead eyes as he approaches you with a nasty grin on his face. You have to be very careful if you want to survive in this mysterious house.", '[bold red]')
+
+                self.show_inventory()
+                get_item = str(console.input("\n[yellow]What object do you want to select? ")).lower()
+
+                if get_item == 'flamethrower' and get_item in self.inventory:
+                    
+                    CuteWrite("Congratulations! You have managed to kill the zombie cook using a flamethrower. Your bravery and skill are impressive. Continue exploring the mysterious house and facing the dangers you encounter. Good luck!", '[bold green]', time=0.05)
+                        
+                    self.__add_score(75)
+                        
+                    if not 'scene_completed' in self.actual_room:
+                        self.actual_room['scene_completed'] = True
+                    
+                    text_action = f"You've pass the {self.actual_room['name']}"
+                    
+                    self.__set_direction_done('intro_scene', 'east')
+                    self.level = 3
+                    text_action = f"You level up to 3"
+                    
+                    WinnerWindow(
+                        prize="+75 points",
+                        action=text_action
+                    )
+
+                    self.__move_to_room('intro_scene', is_coming_back=True)
+
+                else:
+                    self.__subtract_attempts(2)
+                    self.__subtract_score(5)
+                    self.error_message = "Sorry, you've been caught and eaten by the zombie cook! Improve your strategy and try again!"
+                    self.__move_to_room('great_salon_scene', is_coming_back=True)
+
+
             def start_scene():
+                self.collet_object_from_room()
+
                 dw = DirectionWindow(width=400, height=400, text_opt1='Right', text_opt2='Left', text_opt3='Backward')
                 option = dw.get_option()
 
@@ -354,7 +414,12 @@ class Game:
                     self.__move_to_room('evil_spirit_scene', return_to_room='kitchen_scene')
 
                 elif option == 2: #Left
-                    self.kitchen_scene()
+                    if 'scene_completed' in self.actual_room:
+                        CuteWrite("You have completed this scene", '[green]', 0.05)
+                        self.__move_to_room(self.actual_room['return_to_room'],  is_coming_back=True)
+
+                    else:
+                        start_fight_with_zombie_cook()
 
                 elif option == 3: #Backward
                     self.__move_to_room('intro_scene', is_coming_back=True)
@@ -363,10 +428,7 @@ class Game:
                     self.kitchen_scene()
 
             CuteWrite(
-                text="""
-                    You have found yourself in the kitchen of the haunted house. There is a mess everywhere
-                    as well as it being dark and burnt. While you are looking around and discovering, you see an object on the floor of what appears
-                    to be a sword and add it to your inventory. You have to make a decision: right, left, backward. """, 
+                text="""You have found yourself in the kitchen of the haunted house. There is a mess everywhere\nas well as it being dark and burnt. While\nyou are looking around and discovering, you see an object on the floor of what appears\nto be a sword and add it to your inventory\nYou have to make a decision: right, left, backward. """, 
                 color='[bold yellow]', 
                 callback=start_scene
             )
@@ -374,8 +436,7 @@ class Game:
 
     def evil_spirit_scene(self):
         if 'scene_completed' in self.actual_room:
-            CuteWrite("You have completed this scene", '[green]')
-            sleep(0.5)
+            CuteWrite("You have completed this scene", '[green]', time=0.05)
             self.__move_to_room(self.actual_room['return_to_room'],  is_coming_back=True)
             
         self.check_attempts()
@@ -408,16 +469,23 @@ class Game:
 
                     if get_item == 'sword' and get_item in self.inventory:
                         self.__add_score(50)
-                        CuteWrite(f"The monster has been killed. You've found the treasure! Congrats you have obtained +50 points.", '[bold green]')
-                        WinnerWindow()
+                        CuteWrite(f"The monster has been killed. You've found the treasure! Congrats you have obtained +50 points.", '[bold green]', time=0.05)
 
                         if not 'scene_completed' in self.actual_room:
                             self.actual_room['scene_completed'] = True
 
+                        text_action = f"You've pass the {self.actual_room['name']}"
+
                         if 'scene_completed' in self.rooms['attic_scene']:
                             self.__set_direction_done('intro_scene', 'north')
                             self.level = 2
+                            text_action = f"You level up to 2"
 
+                        WinnerWindow(
+                            prize="+50 points",
+                            action=text_action
+                        )
+                    
                         self.__move_to_room('intro_scene')
                         
                     else:
@@ -426,7 +494,8 @@ class Game:
                         self.__move_to_room('intro_scene', is_coming_back=True)
 
                 elif option == 2: #Run
-                    self.__subtract_attempts(reason="You decide run, you lose an attempt")
+                    self.__subtract_score(2)
+                    self.__subtract_attempts(reason="You decide run, you lose an attempt and 2 score points")
                     self.__move_to_room(self.actual_room['return_to_room'],  is_coming_back=True)
 
                 elif option == 3: #Backward
@@ -446,7 +515,7 @@ class Game:
                 self.error_message = f'{get_item} is not available into the inventory'
                 start_scene()
 
-        CuteWrite("""\nYou are inside the room, but everything is dark because the light has been damaged """, '[bold blue]', callback=start_scene)
+        CuteWrite("""\nYou are inside the room, but everything is dark because the light has been damaged """, '[bold yellow]', callback=start_scene)
 
 
     def living_room_scene(self):
@@ -552,13 +621,14 @@ class Game:
 
             if get_item in self.inventory and (get_item == 'amulet' or get_item ==  'amulet'):
                 self.__add_score(100)
-                CuteWrite(f"The mummy has been killed. You've found the treasure! Congrats you have obtained +100 points.", '[bold green]')
-                WinnerWindow()
+                CuteWrite(f"The mummy has been killed. You've found the treasure! Congrats you have obtained +100 points.", '[bold green]', time=0.05)
+                
+                WinnerWindow(prize='+100 points', action="You've won")
                 self.player_win()
 
             else:
                 self.alert_message = 'You have been killed by the mummy!'
-                self.error_message = 'You have been killed by the mummy!'
+                self.error_message = self.alert_message
                 self.__subtract_attempts()
                 self.mummy_scene()
 
@@ -579,33 +649,45 @@ class Game:
 
         return json.loads(file_json)
     
-
-    """
-        Player lose the game and all their points and downgrade the level to 1 againg
-    """
-    def game_over(self):
-        try:
-            GameOverWindow()
-        except :
-            CuteWrite("You lose!", '[bold red]') 
-            
+    def ask_for_play_again(self):
         confirm = str(console.input("\n[blue]Want you play again?")).lower()
 
         if confirm == 'yes' or confirm == 'y':
-            confirm = str(console.input(f"\n[blue]Want you play like {self.player}?")).lower()
+            confirm = str(console.input(f"\n[blue]Want you play like [green]{self.player}[/]?:")).lower()
             if confirm != 'yes' or confirm != 'y':
                 self.player = ''
+
             self.intro()
             self.score = 0
             self.level = 1
             self.attempts = 5
         else:
+            CuteWrite("Thaks for play Tanny/'s treasure hunt!", '[bold red]', time=0.07) 
             exit()
+
+    """
+        Player lose the game and all their points and downgrade the level to 1 againg
+    """
+    def game_over(self):
+        loser_message = "I am so sorry, you have lost the mystery house game. You failed to defeat the mummy and other monstrosities, but don't worry, you can always try again! Cheer up!"
+
+        try:
+            CuteWrite(loser_message, '[bold red]', time=0.05) 
+            GameOverWindow()
+        except :
+            CuteWrite(loser_message, '[bold red]', time=0.05) 
+        
+        self.ask_for_play_again()
+
     
     def player_win(self):
         CuteWrite(
-            text="""Congratulations, you have finished the game""",
-            time=0.008
+            text="""Congratulations! You have won the mystery house game and have shown your ability to defeat the mummy and other monstrosities. You are a true hero!""",
+            time=0.05,
+            color='[bold green]'
         )
+
+        self.ask_for_play_again()
+
  
 Game()

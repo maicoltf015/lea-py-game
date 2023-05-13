@@ -90,7 +90,7 @@
       "id" : "kitchen_scene",
       "name": "Kitchen",
       "description" : "This is the Kitchen salon",
-      "objects": ["weapon", "diamond"],
+      "objects": ["weapon", "flamethrower"],
       "directions": {
         "upstairs" : "kitchen",
         "right" : "habitacion_malvada",
