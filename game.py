@@ -103,7 +103,6 @@ def show_final_score():
     print(text)
     print(score_message)
     
-
     
 def set_rooms():
     global rooms, actual_room, game_file
