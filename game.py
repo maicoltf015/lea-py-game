@@ -1,5 +1,5 @@
 import json
-from window import DirectionWindow, GameOverWindow, WinnerWindow
+from window import direction_window, game_over_window, winner_window
 
 """
     Load json file for loads text, rooms, rooms descriptions, etc..
@@ -56,6 +56,7 @@ def update_player_info():
     )
 
     print(text)
+
 
 def show_final_score():
     
@@ -119,6 +120,7 @@ def menu():
     print('-Menu')
     print('---Type inventory to view the objects obtained')
     print('---Type exit or die to exit the game')
+
 
 def cinput(text='Enter a command: ', return_exact_value=False):
     try:
@@ -332,8 +334,7 @@ def great_salon_scene():
 
     # print("\nYou enter a grand salon where the windows are broken, there is a chilly atmosphere and suddenly\nyou hear a noise. It might be the wind or it might be a ghost. Which decision") 
 
-    dw = DirectionWindow(width=400, height=400)
-    option = dw.get_option()
+    option = direction_window(width=400, height=400)
 
     if option == 1: #upstairs 
         move_to_room('attic_scene')
@@ -385,7 +386,7 @@ def attic_scene():
             if 'scene_completed' not in rooms['attic_scene']:
                 rooms['attic_scene']['scene_completed'] = True
             
-            WinnerWindow(
+            winner_window(
                 prize="+25 points",
                 action=text_action
             )
@@ -444,7 +445,7 @@ def kitchen_scene():
 
                 text_action = f"You level up to 3"
                 
-                WinnerWindow(
+                winner_window(
                     prize="+75 points",
                     action=text_action
                 )
@@ -463,8 +464,7 @@ def kitchen_scene():
         def start_scene():
             collet_object_from_room()
 
-            dw = DirectionWindow(width=400, height=400, text_opt1='Right', text_opt2='Left', text_opt3='Backward')
-            option = dw.get_option()
+            option = direction_window(width=400, height=400, text_opt1='Right', text_opt2='Left', text_opt3='Backward')
 
             if option == 1: #Right
                 move_to_room('evil_spirit_scene', return_to_room='kitchen_scene')
@@ -523,14 +523,12 @@ def evil_spirit_scene():
         
             print("""Oh no, you have awakened the monster\nnow you must fight if you want to pass the level\n\nWhat do you want to do?""")
             
-            dw = DirectionWindow(width=400, 
+            option = direction_window(width=400, 
                 height=400, 
                 text_opt1='Fight', 
                 text_opt2='Run',
                 text_opt3='Backward'
             )
-
-            option = dw.get_option()
 
             if option == 1: #Fight
                 print("You have chosen to fight")
@@ -552,7 +550,7 @@ def evil_spirit_scene():
                         set_level(2)
                         text_action = f"You level up to 2"
 
-                    WinnerWindow(
+                    winner_window(
                         prize="+50 points",
                         action=text_action
                     )
@@ -597,8 +595,7 @@ def living_room_scene():
 
     show_errors_if_exists()
 
-    dw = DirectionWindow(width=400, height=400, text_opt1='Right', text_opt2='Backward', text_opt3='Left')
-    option = dw.get_option()
+    option = direction_window(width=400, height=400, text_opt1='Right', text_opt2='Backward', text_opt3='Left')
 
     if option == 1: #Right
         if not 'attempt_obtained' in actual_room:
@@ -640,8 +637,7 @@ def haunted_room_scene():
     show_errors_if_exists()
     collet_object_from_room()
 
-    dw = DirectionWindow(width=400, height=400, text_opt1='Right', text_opt2='Left', text_opt3='Backward')
-    option = dw.get_option()
+    option = direction_window(width=400, height=400, text_opt1='Right', text_opt2='Left', text_opt3='Backward')
 
     if option == 1: #Right
         move_to_room('trap_room_scene')
@@ -722,7 +718,7 @@ def mummy_scene():
             add_score(100)
             print(f"The mummy has been killed. You've found the treasure! Congrats you have obtained +100 points.")
 
-            WinnerWindow(prize='+100 points', action="You've won")
+            winner_window(prize='+100 points', action="You've won")
             player_win()
 
         else:
@@ -769,7 +765,7 @@ def game_over():
 
     try:
         print(loser_message) 
-        GameOverWindow()
+        game_over_window()
     except :
         print(loser_message) 
     
@@ -780,8 +776,6 @@ def player_win():
     print("""Congratulations! You have won the mystery house game and have shown your ability to defeat the mummy and other monstrosities. You are a true hero!""")
 
     show_final_score()
-
     ask_for_play_again()
 
-# start_game()
-show_final_score()
+start_game()

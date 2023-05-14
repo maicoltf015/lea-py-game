@@ -8,6 +8,6 @@
 > Each room contains different objects to help you find the treasure and escape. Each room is a differen colour to help you differentiate
 > and locate where you are on the haunted house map.
 
-### Para comenzar la aventura, solo debes colocarte en el diractorio del juego y correr:
+### To start the adventure, you just have to go to the game directory and run: python game.py
 - `cd /my_path/to/run/game`
 - `python game.py`
