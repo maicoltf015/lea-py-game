@@ -4,12 +4,7 @@ from window import direction_window, game_over_window, winner_window
 """
     Load json file for loads text, rooms, rooms descriptions, etc..
 """
-def get_json_file_game():
-    with open('game.json', 'r') as file_game:
-        file_json = file_game.read()
-
-    return json.loads(file_json)
-
+ 
 score = 0 #score of the player
 level = 1 #level of the player
 rooms = {} #list of rooms
@@ -46,7 +41,7 @@ def get_player_info():
     intro_scene()
 
 
-def update_player_info():
+def show_player_score():
     text = '{0}{1}{2}{3}{4}'.format(
         f"[Player: {player} | ",
         f"Room: {actual_room['name']} | ",
@@ -58,7 +53,7 @@ def update_player_info():
     print(text)
 
 
-def show_final_score():
+def show_final_score(show_final_message=True):
     
     obtained_objecs = len(inventory) - 1 # -m because the user no select the map
 
@@ -102,8 +97,19 @@ def show_final_score():
 
     print(f"{player}, You've been obtained the next score:")
     print(text)
-    print(score_message)
-    
+
+    if show_final_message:
+        print(score_message)
+
+
+def get_json_file_game():
+    try:
+        with open('game.json', 'r') as file_game:
+            file_json = file_game.read()
+        return json.loads(file_json)
+    except:
+        print('Has occurred an error while reading game.json, please check your file and try again')
+        exit(1)
     
 def set_rooms():
     global rooms, actual_room, game_file
@@ -115,13 +121,7 @@ def set_rooms():
     for room_key in rooms:
         rooms[room_key] = rooms[room_key]
 
-
-def menu():
-    print('-Menu')
-    print('---Type inventory to view the objects obtained')
-    print('---Type exit or die to exit the game')
-
-
+ 
 def cinput(text='Enter a command: ', return_exact_value=False):
     try:
         typed_by_player = input(text)
@@ -130,13 +130,16 @@ def cinput(text='Enter a command: ', return_exact_value=False):
         if result == 'menu':
             menu()
             desicion = cinput('Select an menu option: ')
-        
-            if desicion == 'exit' or desicion == 'die':
+
+            if desicion == 'exit' or desicion == 'die' or desicion == 'leave' or desicion == '3':
                 print('See you later, you can enter whenever you want to face the challenges of the mysterious house.');
                 exit()
 
-            elif desicion == 'inventory' or desicion == 'y':
+            elif desicion == 'inventory' or desicion == '2':
                 show_inventory()
+
+            elif desicion == 'score' or desicion == '1':
+                show_final_score(show_final_message=False)
 
     except KeyboardInterrupt:
         return cinput(text)
@@ -149,13 +152,6 @@ def get_room_directions():
     return actual_room['directions']
  
  
-def drop_object(object=''):
-    global inventory
-
-    if object in inventory:
-        inventory.remove(str(object))
-
-
 def collect_object(object):
     global inventory
 
@@ -249,7 +245,7 @@ def move_to_room(room_key, return_to_room = '', is_coming_back = False):
     actual_room = rooms[room_key]
     actual_room['return_to_room'] = return_to_room
 
-    update_player_info()
+    show_player_score()
 
 
 def set_direction_done(direction):
@@ -271,6 +267,14 @@ def show_errors_if_exists():
         print(error_message)
         error_message=''
 
+
+def menu():
+    print('\n---Game Menu---')
+    print('  1. Score')
+    print('  2. Inventory')
+    print('  3. Exit\n')
+
+
 """
     Here we start the game showing the intro and requesting the username
 """
@@ -281,7 +285,7 @@ def intro_scene():
 
     if player_welcome is False:
         print(f'\nWelcome {player}. Choose wisely and good luck!')
-        print('--Type menu to see the menu options\n')
+        print('---Type menu to see the game menu---\n')
 
         player_welcome = True
     
@@ -291,9 +295,9 @@ def intro_scene():
     collet_object_from_room()
 
     #show the list of directions
-    directions_list = "\nNow, select a direction to continue\n"
+    directions_list = "\n---Your choices are---\n"
     for direction in directions:
-        completed =  " is completed :)" if direction in directions_done else ''
+        completed =  " [completed]" if direction in directions_done else ''
 
         directions_list += '{0}{1}\n'.format(
             direction.title(),
@@ -302,8 +306,7 @@ def intro_scene():
 
     print(directions_list) 
     
-    goto = cinput("Your choices are north, east, south and west. Which will you choose?: ")
-    print(f'You type {goto}')
+    goto = cinput("Which will you choose?: ")
         
     if (goto == 'north' or goto == 'n') and 'north' in directions: 
         move_to_room('great_salon_scene')
@@ -399,6 +402,7 @@ def attic_scene():
             error_message = 'You have lost the level! You have obtained 0 points and lose an attepmt.'
             alert_message = error_message
             subtract_attempts()
+            subtract_score(2)
             move_to_room('intro_scene', is_coming_back=True)
             intro_scene()
             break
@@ -455,7 +459,7 @@ def kitchen_scene():
 
             else:
                 subtract_attempts(2)
-                subtract_score(5)
+                subtract_score(10)
                 error_message = "Sorry, you've been caught and eaten by the zombie cook! Improve your strategy and try again!"
                 move_to_room('intro_scene', is_coming_back=True)
                 intro_scene()
@@ -559,7 +563,7 @@ def evil_spirit_scene():
                     intro_scene()
                     
                 else:
-                    subtract_attempts()
+                    subtract_attempts(2)
                     error_message = 'Wrong object or object is not in inventory, you lose an attempt'
                     move_to_room('intro_scene', is_coming_back=True)
                     intro_scene()
@@ -579,6 +583,7 @@ def evil_spirit_scene():
         elif get_item != 'flashlight' and get_item in inventory:
             alert_message = 'You have been killed by the monsters because you have been selected the incorrect object for pass the level into the Evil Spirit, you lose an attempt.'
             
+            subtract_score(3)
             subtract_attempts(reason = alert_message)
             where_go_player()
             
@@ -600,6 +605,7 @@ def living_room_scene():
     if option == 1: #Right
         if not 'attempt_obtained' in actual_room:
             add_attempts()
+            subtract_score(2)
             actual_room['attempt_obtained'] = True
             print("Congratulations, you've won one more attempt.")
 
@@ -682,13 +688,15 @@ def trap_room_scene():
                 alert_message = error_message
 
                 subtract_attempts(2)
+                subtract_score(5)
                 move_to_room('trap_room_scene')
                 trap_room_scene()
                 break
 
     elif action == 'run' or action == 'r':
         subtract_attempts()
-        alert_message = 'Lograste salir de la habitacion de trampas, pero has perdido una vida'
+        subtract_score(2)
+        alert_message = 'Lograste salir de la habitacion de trampas, pero has perdido una vida y 2 puntos'
         error_message = alert_message
         move_to_room('haunted_room_scene')
         haunted_room_scene()
@@ -725,11 +733,13 @@ def mummy_scene():
             alert_message = 'You have been killed by the mummy!'
             error_message = alert_message
             subtract_attempts()
+            subtract_score(10)
             mummy_scene()
 
     elif action == 'run' or action == 'r':
         print("""\nYou lost an attempt """)
         subtract_attempts()
+        subtract_score()
         move_to_room('haunted_room_scene')
         haunted_room_scene()
 
@@ -777,5 +787,6 @@ def player_win():
 
     show_final_score()
     ask_for_play_again()
+
 
 start_game()
